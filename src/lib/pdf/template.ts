@@ -266,6 +266,8 @@ export function buildTemplate(dados: DadosPDF): string {
     padding: 4mm;
     margin: 4mm 0;
     text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .conclusao-box .opcao {
     font-size: 11pt;
@@ -545,27 +547,28 @@ ${Object.entries(gruposItens)
   c) sofrer qualquer tipo de acidente.
 </p>
 
-<!-- Itens reprovados listados automaticamente -->
 ${gerarTabelaReprovados(itens_inspecao)}
 
 <!-- ==================== SEÇÃO 7: CONCLUSÃO ==================== -->
-<h2>7. Conclusão</h2>
-<div class="conclusao-box">
-  <p class="opcao ${laudo.conclusao === "apto" ? "apto" : ""}">
-    ${checkbox(laudo.conclusao === "apto")} O equipamento <strong>ESTÁ APTO</strong> para operação
-  </p>
-  <p class="opcao ${laudo.conclusao === "nao_apto" ? "nao-apto" : ""}">
-    ${checkbox(laudo.conclusao === "nao_apto")} O equipamento <strong>NÃO ESTÁ APTO</strong> para operação
+<div style="page-break-inside: avoid; break-inside: avoid;">
+  <h2>7. Conclusão</h2>
+  <div class="conclusao-box">
+    <p class="opcao ${laudo.conclusao === "apto" ? "apto" : ""}">
+      ${checkbox(laudo.conclusao === "apto")} O equipamento <strong>ESTÁ APTO</strong> para operação
+    </p>
+    <p class="opcao ${laudo.conclusao === "nao_apto" ? "nao-apto" : ""}">
+      ${checkbox(laudo.conclusao === "nao_apto")} O equipamento <strong>NÃO ESTÁ APTO</strong> para operação
+    </p>
+  </div>
+  <p class="texto-secao">
+    Declaramos que o equipamento foi inspecionado conforme as normas regulamentadoras vigentes (NR-11, NR-12),
+    normas técnicas ABNT NBR 14768:2015 e ABNT NBR 16092:2012, e que ${
+      laudo.conclusao === "apto"
+        ? "atende aos requisitos mínimos de segurança para operação."
+        : "apresenta não conformidades que impedem sua operação segura, devendo ser corrigidas antes de nova utilização."
+    }
   </p>
 </div>
-<p class="texto-secao">
-  Declaramos que o equipamento foi inspecionado conforme as normas regulamentadoras vigentes (NR-11, NR-12),
-  normas técnicas ABNT NBR 14768:2015 e ABNT NBR 16092:2012, e que ${
-    laudo.conclusao === "apto"
-      ? "atende aos requisitos mínimos de segurança para operação."
-      : "apresenta não conformidades que impedem sua operação segura, devendo ser corrigidas antes de nova utilização."
-  }
-</p>
 
 <!-- ==================== SEÇÃO 8: REFERÊNCIAS NORMATIVAS ==================== -->
 <h2>8. Referências Normativas</h2>
