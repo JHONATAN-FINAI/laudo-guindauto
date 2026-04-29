@@ -38,8 +38,10 @@ export default function EditarLaudoPage() {
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) carregarLaudo(id);
-    setEtapa(0);
+    if (id) {
+      setEtapa(0);
+      carregarLaudo(id);
+    }
   }, [id]);
 
   async function carregarLaudo(laudoId: string) {
@@ -54,23 +56,23 @@ export default function EditarLaudoPage() {
       setLaudo({
         ...data,
         proprietario: Array.isArray(data.proprietarios)
-          ? data.proprietarios[0] || null
+          ? data.proprietarios[0] ?? null
           : data.proprietarios,
         implemento: Array.isArray(data.implementos)
-          ? data.implementos[0] || null
+          ? data.implementos[0] ?? null
           : data.implementos,
         veiculo: Array.isArray(data.veiculos)
-          ? data.veiculos[0] || null
+          ? data.veiculos[0] ?? null
           : data.veiculos,
         caracteristicas: Array.isArray(data.caracteristicas_veiculo)
-          ? data.caracteristicas_veiculo[0] || null
+          ? data.caracteristicas_veiculo[0] ?? null
           : data.caracteristicas_veiculo,
-        itens_inspecao: data.itens_inspecao || [],
-        fotos: data.fotos_laudo || [],
-        user: { nome: "", crea_numero: null, crea_estado: null },
+        itens_inspecao: data.itens_inspecao ?? [],
+        fotos: data.fotos_laudo ?? [],
+        user: data.user ?? { nome: "", crea_numero: null, crea_estado: null },
       });
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : "Erro desconhecido");
     } finally {
       setCarregando(false);
     }
@@ -154,9 +156,7 @@ export default function EditarLaudoPage() {
           ) : (
             <button
               onClick={() =>
-                router.push(
-                  isFinalizado ? "/laudos/finalizados" : "/laudos/rascunhos"
-                )
+                router.push(isFinalizado ? "/laudos/finalizados" : "/laudos/rascunhos")
               }
               className="px-6 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300"
             >

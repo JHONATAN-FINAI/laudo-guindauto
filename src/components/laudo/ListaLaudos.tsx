@@ -9,15 +9,15 @@ interface LaudoListItem {
   id: string;
   numero_inspecao: string | null;
   status: StatusLaudo;
-  data_inspecao: string;
+  data_inspecao: string | null;
   data_validade: string | null;
   conclusao: string | null;
   art_numero: string | null;
   created_at: string;
   updated_at: string;
-  proprietarios: { razao_social: string; cnpj: string } | null;
-  veiculos: { placa: string; marca_modelo: string } | null;
-  implementos: { fabricante: string; modelo: string } | null;
+  proprietarios: { razao_social: string | null; cnpj: string | null } | null;
+  veiculos: { placa: string | null; marca_modelo: string | null } | null;
+  implementos: { fabricante: string | null; modelo: string | null } | null;
 }
 
 interface ListaLaudosProps {
@@ -33,53 +33,34 @@ export default function ListaLaudos({ status, titulo }: ListaLaudosProps) {
 
   useEffect(() => {
     carregarLaudos();
-  }, []);
+  }, [status]);
 
   async function carregarLaudos() {
     setCarregando(true);
     try {
       const res = await fetch(`/api/laudos?status=${status}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Normaliza relações (Supabase retorna arrays para select com join)
-        setLaudos(
-          data.map((l: any) => ({
-            ...l,
-            proprietarios: Array.isArray(l.proprietarios)
-              ? l.proprietarios[0] || null
-              : l.proprietarios,
-            veiculos: Array.isArray(l.veiculos)
-              ? l.veiculos[0] || null
-              : l.veiculos,
-            implementos: Array.isArray(l.implementos)
-              ? l.implementos[0] || null
-              : l.implementos,
-          }))
-        );
-      }
+      if (res.ok) setLaudos(await res.json());
     } finally {
       setCarregando(false);
     }
   }
 
   async function excluirLaudo(id: string) {
-    if (!confirm("Excluir este rascunho?")) return;
+    if (!confirm("Excluir este rascunho permanentemente?")) return;
     const res = await fetch(`/api/laudos/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setLaudos((prev) => prev.filter((l) => l.id !== id));
-    }
+    if (res.ok) setLaudos((prev) => prev.filter((l) => l.id !== id));
   }
 
-  const laudosFiltrados = laudos.filter((l) => {
-    if (!busca) return true;
-    const termo = busca.toLowerCase();
-    return (
-      l.proprietarios?.razao_social?.toLowerCase().includes(termo) ||
-      l.veiculos?.placa?.toLowerCase().includes(termo) ||
-      l.implementos?.modelo?.toLowerCase().includes(termo) ||
-      l.numero_inspecao?.toLowerCase().includes(termo)
-    );
-  });
+  const termoBusca = busca.toLowerCase();
+  const laudosFiltrados = termoBusca
+    ? laudos.filter(
+        (l) =>
+          l.proprietarios?.razao_social?.toLowerCase().includes(termoBusca) ||
+          l.veiculos?.placa?.toLowerCase().includes(termoBusca) ||
+          l.implementos?.modelo?.toLowerCase().includes(termoBusca) ||
+          l.numero_inspecao?.toLowerCase().includes(termoBusca)
+      )
+    : laudos;
 
   if (carregando) {
     return (
@@ -98,7 +79,6 @@ export default function ListaLaudos({ status, titulo }: ListaLaudosProps) {
         </span>
       </div>
 
-      {/* Busca */}
       {laudos.length > 0 && (
         <input
           type="text"
@@ -109,7 +89,6 @@ export default function ListaLaudos({ status, titulo }: ListaLaudosProps) {
         />
       )}
 
-      {/* Lista */}
       {laudosFiltrados.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-gray-500">
@@ -135,29 +114,26 @@ export default function ListaLaudos({ status, titulo }: ListaLaudosProps) {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  {/* Título principal */}
                   <p className="font-medium text-gray-900 truncate">
                     {laudo.proprietarios?.razao_social || "Proprietário não informado"}
                   </p>
 
-                  {/* Info secundária */}
                   <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
-                    {laudo.veiculos?.placa && (
-                      <span>Placa: {laudo.veiculos.placa}</span>
-                    )}
+                    {laudo.veiculos?.placa && <span>Placa: {laudo.veiculos.placa}</span>}
                     {laudo.implementos?.modelo && (
-                      <span>{laudo.implementos.fabricante} {laudo.implementos.modelo}</span>
+                      <span>
+                        {laudo.implementos.fabricante} {laudo.implementos.modelo}
+                      </span>
                     )}
-                    {laudo.numero_inspecao && (
-                      <span>Nº {laudo.numero_inspecao}</span>
-                    )}
+                    {laudo.numero_inspecao && <span>Nº {laudo.numero_inspecao}</span>}
                   </div>
 
-                  {/* Data e conclusão */}
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    <span className="text-gray-400">
-                      {new Date(laudo.data_inspecao).toLocaleDateString("pt-BR")}
-                    </span>
+                    {laudo.data_inspecao && (
+                      <span className="text-gray-400">
+                        {new Date(laudo.data_inspecao + "T12:00:00").toLocaleDateString("pt-BR")}
+                      </span>
+                    )}
                     {laudo.conclusao && (
                       <span
                         className={`px-2 py-0.5 rounded-full font-medium ${
@@ -176,13 +152,12 @@ export default function ListaLaudos({ status, titulo }: ListaLaudosProps) {
                     )}
                     {laudo.data_validade && (
                       <span className="text-gray-400">
-                        Val: {new Date(laudo.data_validade).toLocaleDateString("pt-BR")}
+                        Val: {new Date(laudo.data_validade + "T12:00:00").toLocaleDateString("pt-BR")}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Ações */}
                 <div className="flex gap-2 ml-4">
                   <Link
                     href={`/laudos/${laudo.id}/editar`}
@@ -195,6 +170,7 @@ export default function ListaLaudos({ status, titulo }: ListaLaudosProps) {
                     <a
                       href={`/api/laudos/${laudo.id}/pdf`}
                       target="_blank"
+                      rel="noreferrer"
                       className="px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100"
                     >
                       PDF
