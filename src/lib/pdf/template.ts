@@ -1,5 +1,5 @@
 import type { DadosPDF } from "./generate";
-import { NOMES_SECOES } from "@/lib/laudos/seed";
+import { NOMES_SECOES } from "@/lib/laudos/constants";
 import * as fs from "fs";
 import * as path from "path";
 

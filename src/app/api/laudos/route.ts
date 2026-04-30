@@ -8,7 +8,7 @@ import {
 import { getSessionUserId } from "@/lib/auth-helpers";
 import { eq, desc, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { ITENS_INSPECAO_SEED, criarEstruturaLaudo } from "@/lib/laudos/seed";
+import { criarEstruturaLaudo } from "@/lib/laudos/seed";
 
 // GET /api/laudos
 export async function GET(request: NextRequest) {

@@ -5,7 +5,7 @@ import { useWizardStore } from "@/hooks/useWizardStore";
 import { cn } from "@/lib/utils/cn";
 import { ChevronDown, CheckCircle, XCircle, Minus } from "lucide-react";
 import type { ItemInspecao, SituacaoItem } from "@/types/database";
-import { NOMES_SECOES } from "@/lib/laudos/seed";
+import { NOMES_SECOES } from "@/lib/laudos/constants";
 
 // Ordem exata das seções conforme laudo
 const SECOES = [

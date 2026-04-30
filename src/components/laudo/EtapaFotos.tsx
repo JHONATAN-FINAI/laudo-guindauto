@@ -4,30 +4,7 @@ import { useState } from "react";
 import { useWizardStore } from "@/hooks/useWizardStore";
 import { Camera, X, Loader2 } from "lucide-react";
 import type { TipoFoto } from "@/types/database";
-
-// Ordem canônica e labels de exibição (espelha o PDF)
-export const FOTOS_CONFIG: { tipo: TipoFoto; label: string; obrigatorio: boolean }[] = [
-  { tipo: "capa",                  label: "Foto 1 — Capa (vista geral)",              obrigatorio: true  },
-  { tipo: "placa",                 label: "Foto 2 — Placa do Veículo",                obrigatorio: true  },
-  { tipo: "guindaste",             label: "Foto 3 — Guindaste (visão geral)",         obrigatorio: true  },
-  { tipo: "alavancas",             label: "Foto 4 — Alavancas de Acionamento",        obrigatorio: true  },
-  { tipo: "botao_emergencia",      label: "Foto 5 — Botão de Emergência",             obrigatorio: true  },
-  { tipo: "controle_remoto",       label: "Foto 6 — Controle Remoto",                obrigatorio: true  },
-  { tipo: "plaqueta",              label: "Foto 7 — Plaqueta do Guindaste",           obrigatorio: true  },
-  { tipo: "tabela_cargas",         label: "Foto 8 — Tabela de Cargas",               obrigatorio: true  },
-  { tipo: "grafico_cargas",        label: "Foto 9 — Gráfico de Cargas",              obrigatorio: true  },
-  { tipo: "mangueiras",            label: "Foto 10 — Mangueiras Hidráulicas",         obrigatorio: true  },
-  { tipo: "valvulas",              label: "Foto 11 — Válvulas",                       obrigatorio: true  },
-  { tipo: "estabilizadores",       label: "Foto 12 — Estabilizadores (Patolas)",      obrigatorio: true  },
-  { tipo: "horimetro",             label: "Foto 13 — Horímetro",                     obrigatorio: true  },
-  { tipo: "lateral_dianteira_esq", label: "Foto 14 — Lateral Dianteira 45° Esq.",    obrigatorio: true  },
-  { tipo: "lateral_dianteira_dir", label: "Foto 15 — Lateral Dianteira 45° Dir.",    obrigatorio: true  },
-  { tipo: "lateral_traseira_esq",  label: "Foto 16 — Lateral Traseira 45° Esq.",     obrigatorio: true  },
-  { tipo: "lateral_traseira_dir",  label: "Foto 17 — Lateral Traseira 45° Dir.",     obrigatorio: true  },
-  { tipo: "extra_1",               label: "Foto 18 — Extra (opcional)",               obrigatorio: false },
-  { tipo: "extra_2",               label: "Foto 19 — Extra (opcional)",               obrigatorio: false },
-  { tipo: "extra_3",               label: "Foto 20 — Extra (opcional)",               obrigatorio: false },
-];
+import { FOTOS_CONFIG } from "@/lib/laudos/constants";
 
 const FOTOS_OBRIGATORIAS = FOTOS_CONFIG.filter((f) => f.obrigatorio);
 const FOTOS_EXTRAS = FOTOS_CONFIG.filter((f) => !f.obrigatorio);
@@ -164,7 +141,6 @@ export function EtapaFotos() {
         </span>
       </div>
 
-      {/* Barra de progresso */}
       <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
         <div
           className="h-full rounded-full bg-blue-500 transition-all"
@@ -178,7 +154,7 @@ export function EtapaFotos() {
           {FOTOS_OBRIGATORIAS.map((slot) => (
             <SlotFoto
               key={slot.tipo}
-              tipo={slot.tipo}
+              tipo={slot.tipo as TipoFoto}
               label={slot.label}
               fotoUrl={fotos[slot.tipo] || null}
               laudoId={laudo!.id}
@@ -195,7 +171,7 @@ export function EtapaFotos() {
           {FOTOS_EXTRAS.map((slot) => (
             <SlotFoto
               key={slot.tipo}
-              tipo={slot.tipo}
+              tipo={slot.tipo as TipoFoto}
               label={slot.label}
               fotoUrl={fotos[slot.tipo] || null}
               laudoId={laudo!.id}
@@ -207,12 +183,8 @@ export function EtapaFotos() {
       </div>
 
       <div className="flex justify-between">
-        <button onClick={etapaAnterior} className="btn-secondary">
-          Voltar
-        </button>
-        <button onClick={proximaEtapa} className="btn-primary">
-          Avançar
-        </button>
+        <button onClick={etapaAnterior} className="btn-secondary">Voltar</button>
+        <button onClick={proximaEtapa} className="btn-primary">Avançar</button>
       </div>
     </div>
   );
