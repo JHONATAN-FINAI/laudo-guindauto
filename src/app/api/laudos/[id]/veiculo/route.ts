@@ -21,7 +21,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     .set({
       tipo: body.tipo, placa: body.placa, ano_modelo: body.ano_modelo,
       chassi: body.chassi, renavan: body.renavan, marca_modelo: body.marca_modelo,
-      num_eixos: body.num_eixos, pbtc: body.pbtc,
+      num_eixos: body.num_eixos, pbtc: body.pbtc, hodometro: body.hodometro,
     })
     .where(eq(veiculos.laudo_id, id))
     .returning();

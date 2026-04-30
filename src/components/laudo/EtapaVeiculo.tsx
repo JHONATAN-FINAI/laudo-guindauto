@@ -12,6 +12,7 @@ const CAMPOS = [
   { key: "marca_modelo", label: "Marca/Modelo" },
   { key: "num_eixos", label: "Nº de Eixos" },
   { key: "pbtc", label: "PBTC" },
+  { key: "hodometro", label: "Hodômetro" },
 ] as const;
 
 export function EtapaVeiculo() {

@@ -88,6 +88,7 @@ export interface Veiculo {
   marca_modelo: string | null;
   num_eixos: string | null;
   pbtc: string | null;
+  hodometro: string | null;
 }
 
 export interface CaracteristicasVeiculo {

@@ -429,6 +429,7 @@ ${veiculo?.renavan     ? `<p class="dado"><strong>RENAVAN:</strong> ${veiculo.re
 ${veiculo?.marca_modelo? `<p class="dado"><strong>MARCA/MODELO:</strong> ${veiculo.marca_modelo}</p>` : ""}
 ${veiculo?.num_eixos   ? `<p class="dado"><strong>Nº DE EIXOS:</strong> ${veiculo.num_eixos}</p>` : ""}
 ${veiculo?.pbtc        ? `<p class="dado"><strong>PESO BRUTO TOTAL COMBINADO:</strong> ${veiculo.pbtc}</p>` : ""}
+${veiculo?.hodometro    ? `<p class="dado"><strong>HODÔMETRO:</strong> ${veiculo.hodometro}</p>` : ""}
 
 <!-- ===================== 4. CARACTERÍSTICAS ===================== -->
 <h2 style="margin-top:6mm;">4. Características Atuais do Veículo</h2>

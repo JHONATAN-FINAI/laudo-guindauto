@@ -102,6 +102,7 @@ export const veiculos = pgTable("veiculos", {
   marca_modelo: text("marca_modelo"),
   num_eixos: text("num_eixos"),
   pbtc: text("pbtc"),
+  hodometro: text("hodometro"),
 });
 
 // Características do veículo
