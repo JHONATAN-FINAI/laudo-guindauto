@@ -1,13 +1,33 @@
 // Tipos inferidos do schema Drizzle
-// Mantidos para compatibilidade com componentes do wizard
 
 export type StatusLaudo = "rascunho" | "finalizado";
 export type ConclusaoLaudo = "apto" | "nao_apto";
 export type SituacaoItem = "aprovado" | "reprovado" | "nao_se_aplica";
+
 export type TipoFoto =
-  | "capa" | "placa" | "guindaste" | "alavancas" | "plaqueta"
-  | "grafico_cargas" | "mangueiras" | "estabilizadores" | "horimetro"
-  | "extra_1" | "extra_2" | "extra_3" | "extra_4" | "extra_5";
+  // Principais (1–13)
+  | "capa"
+  | "placa"
+  | "guindaste"
+  | "alavancas"
+  | "botao_emergencia"
+  | "controle_remoto"
+  | "plaqueta"
+  | "tabela_cargas"
+  | "grafico_cargas"
+  | "mangueiras"
+  | "valvulas"
+  | "estabilizadores"
+  | "horimetro"
+  // Ângulos (14–17)
+  | "lateral_dianteira_esq"
+  | "lateral_dianteira_dir"
+  | "lateral_traseira_esq"
+  | "lateral_traseira_dir"
+  // Extras (18–20)
+  | "extra_1"
+  | "extra_2"
+  | "extra_3";
 
 export interface User {
   id: string;
@@ -99,7 +119,7 @@ export interface FotoLaudo {
   id: string;
   laudo_id: string;
   tipo: TipoFoto;
-  storage_url: string; // URL do Vercel Blob (era storage_path)
+  storage_url: string;
   legenda: string | null;
   ordem: number;
   created_at: string;

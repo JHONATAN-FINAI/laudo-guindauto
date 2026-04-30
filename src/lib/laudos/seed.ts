@@ -7,49 +7,68 @@ import {
   itens_inspecao,
 } from "@/lib/db/schema";
 
-/** 36 itens de inspeção conforme NBR 14768 */
+// ---------------------------------------------------------------------------
+// 30 itens de inspeção conforme laudo padrão
+// Baseado na ABNT NBR 14768:2015, NBR 16092:2012, NR-11 e NR-12
+// ---------------------------------------------------------------------------
 export const ITENS_INSPECAO_SEED = [
-  { secao: "5.1", numero_item: "5.1.01", descricao: "Estrutura principal (coluna, lança e articulações)" },
-  { secao: "5.1", numero_item: "5.1.02", descricao: "Estado geral de conservação e pintura" },
-  { secao: "5.1", numero_item: "5.1.03", descricao: "Soldas estruturais (trincas, corrosão)" },
-  { secao: "5.1", numero_item: "5.1.04", descricao: "Pinos e travas de articulação" },
-  { secao: "5.1", numero_item: "5.1.05", descricao: "Cilindros hidráulicos (vazamentos, fixação)" },
-  { secao: "5.1", numero_item: "5.1.06", descricao: "Mangueiras e conexões hidráulicas" },
-  { secao: "5.1", numero_item: "5.1.07", descricao: "Reservatório de óleo hidráulico (nível, estado)" },
-  { secao: "5.2", numero_item: "5.2.01", descricao: "Bomba hidráulica (ruídos, vazamentos)" },
-  { secao: "5.2", numero_item: "5.2.02", descricao: "Válvulas de controle direcional" },
-  { secao: "5.2", numero_item: "5.2.03", descricao: "Válvula de alívio de pressão" },
-  { secao: "5.2", numero_item: "5.2.04", descricao: "Filtros hidráulicos (estado, validade)" },
-  { secao: "5.2", numero_item: "5.2.05", descricao: "Alavancas e comandos de operação" },
-  { secao: "5.2", numero_item: "5.2.06", descricao: "Tomada de força (PTO)" },
-  { secao: "5.2", numero_item: "5.2.07", descricao: "Sistema de giro (coroa, rolamento, motor)" },
-  { secao: "5.3", numero_item: "5.3.01", descricao: "Estabilizadores (patolas) - estrutura" },
-  { secao: "5.3", numero_item: "5.3.02", descricao: "Estabilizadores - cilindros e travas" },
-  { secao: "5.3", numero_item: "5.3.03", descricao: "Estabilizadores - sapatas e base de apoio" },
-  { secao: "5.3", numero_item: "5.3.04", descricao: "Estabilizadores - extensão e recolhimento" },
-  { secao: "5.3", numero_item: "5.3.05", descricao: "Nivelamento do equipamento" },
-  { secao: "5.3", numero_item: "5.3.06", descricao: "Indicador de nível (bolha)" },
-  { secao: "5.3", numero_item: "5.3.07", descricao: "Fixação da coluna ao chassi/subframe" },
-  { secao: "5.4", numero_item: "5.4.01", descricao: "Gancho de carga (trava de segurança)" },
-  { secao: "5.4", numero_item: "5.4.02", descricao: "Cabo de aço / corrente de içamento" },
-  { secao: "5.4", numero_item: "5.4.03", descricao: "Guincho / moitão (estado, fixação)" },
-  { secao: "5.4", numero_item: "5.4.04", descricao: "Limitador de momento de carga (LMC)" },
-  { secao: "5.4", numero_item: "5.4.05", descricao: "Válvula de retenção (anti-queda)" },
-  { secao: "5.4", numero_item: "5.4.06", descricao: "Gráfico/tabela de cargas (legível, fixado)" },
-  { secao: "5.4", numero_item: "5.4.07", descricao: "Plaqueta de identificação do fabricante" },
-  { secao: "5.5", numero_item: "5.5.01", descricao: "Sinalização visual (faixas refletivas)" },
-  { secao: "5.5", numero_item: "5.5.02", descricao: "Alarme sonoro de operação" },
-  { secao: "5.5", numero_item: "5.5.03", descricao: "Dispositivo anti-two block" },
-  { secao: "5.5", numero_item: "5.5.04", descricao: "Proteção do operador contra esmagamento" },
-  { secao: "5.5", numero_item: "5.5.05", descricao: "Aterramento elétrico" },
-  { secao: "5.5", numero_item: "5.5.06", descricao: "Horímetro (funcionamento)" },
-  { secao: "5.5", numero_item: "5.5.07", descricao: "Manual de operação disponível" },
-  { secao: "5.5", numero_item: "5.5.08", descricao: "Condições gerais de segurança para operação" },
+  // 5.1 SISTEMA DE SINALIZAÇÃO
+  { secao: "5.1", numero_item: "5.1.1", descricao: "Lanternas indicadoras de direção" },
+  { secao: "5.1", numero_item: "5.1.2", descricao: "Lanternas de posição" },
+  { secao: "5.1", numero_item: "5.1.3", descricao: "Lanternas de freio" },
+  { secao: "5.1", numero_item: "5.1.4", descricao: "Lanterna de freio elevada" },
+  { secao: "5.1", numero_item: "5.1.5", descricao: "Lanternas de marcha-ré" },
+  { secao: "5.1", numero_item: "5.1.6", descricao: "Lanternas delimitadoras e laterais" },
+  { secao: "5.1", numero_item: "5.1.7", descricao: "Pisca-alerta" },
+  { secao: "5.1", numero_item: "5.1.8", descricao: "Refletores" },
+  { secao: "5.1", numero_item: "5.1.9", descricao: "Faixas refletivas" },
+
+  // 5.2 SISTEMA DE ILUMINAÇÃO
+  { secao: "5.2", numero_item: "5.2.1", descricao: "Faróis principais" },
+  { secao: "5.2", numero_item: "5.2.2", descricao: "Faróis de neblina" },
+  { secao: "5.2", numero_item: "5.2.3", descricao: "Faróis de longo alcance" },
+  { secao: "5.2", numero_item: "5.2.4", descricao: "Luzes do painel" },
+
+  // 5.3 SISTEMA DE FREIO
+  { secao: "5.3", numero_item: "5.3.1", descricao: "Comandos" },
+  { secao: "5.3", numero_item: "5.3.2", descricao: "Servo-freio/hidrovácuo" },
+  { secao: "5.3", numero_item: "5.3.3", descricao: "Reservatório do fluído de freio" },
+  { secao: "5.3", numero_item: "5.3.4", descricao: "Reservatório de ar/vácuo" },
+  { secao: "5.3", numero_item: "5.3.5", descricao: "Circuitos de freio/tubulações/conexões" },
+  { secao: "5.3", numero_item: "5.3.6", descricao: "Freio estacionário" },
+
+  // 5.4 PNEUS E RODAS
+  { secao: "5.4", numero_item: "5.4.1", descricao: "Desgaste da banda de rodagem" },
+  { secao: "5.4", numero_item: "5.4.2", descricao: "Tamanho e tipo dos pneus" },
+  { secao: "5.4", numero_item: "5.4.3", descricao: "Simetria dos pneus e rodas" },
+  { secao: "5.4", numero_item: "5.4.4", descricao: "Existência de hérnias ou bolhas" },
+  { secao: "5.4", numero_item: "5.4.5", descricao: "Existência de cortes ou quebras com exposição dos cordonéis" },
+  { secao: "5.4", numero_item: "5.4.6", descricao: "Existência de separação da banda de rodagem" },
+
+  // 5.5 INSPEÇÃO DO IMPLEMENTO (EQUIPAMENTO GUINDAUTO)
+  { secao: "5.5", numero_item: "5.5.1",  descricao: "Estrutura principal do guindauto (braço, lanças, base, coluna)" },
+  { secao: "5.5", numero_item: "5.5.2",  descricao: "Fixação do equipamento ao chassi do caminhão" },
+  { secao: "5.5", numero_item: "5.5.3",  descricao: "Sistema hidráulico (mangueiras, cilindros, conexões, reservatórios)" },
+  { secao: "5.5", numero_item: "5.5.4",  descricao: "Válvulas de segurança, válvula de retenção e limitadores de carga" },
+  { secao: "5.5", numero_item: "5.5.5",  descricao: "Dispositivos de comando e parada de emergência (NR-12)" },
+  { secao: "5.5", numero_item: "5.5.6",  descricao: "Estabilizadores (sapatas, braços e suportes)" },
+  { secao: "5.5", numero_item: "5.5.7",  descricao: "Moitão, gancho, trava de segurança e cabos" },
+  { secao: "5.5", numero_item: "5.5.8",  descricao: "Tabela de carga legível e afixada no equipamento" },
+  { secao: "5.5", numero_item: "5.5.9",  descricao: "Funcionamento geral dos movimentos (elevação, giro, extensão)" },
+  { secao: "5.5", numero_item: "5.5.10", descricao: "Sistema elétrico e dispositivos de aviso/sinalização" },
+  { secao: "5.5", numero_item: "5.5.11", descricao: "Teste de carga (opcional – conforme condição de uso)" },
 ] as const;
+
+export const NOMES_SECOES: Record<string, string> = {
+  "5.1": "Sistema de Sinalização",
+  "5.2": "Sistema de Iluminação",
+  "5.3": "Sistema de Freio",
+  "5.4": "Pneus e Rodas",
+  "5.5": "Inspeção do Implemento (Equipamento Guindauto)",
+};
 
 /**
  * Cria todas as tabelas filhas de um laudo recém-criado.
- * Centralizado aqui para evitar duplicação entre routes.
  */
 export async function criarEstruturaLaudo(laudoId: string) {
   await Promise.all([

@@ -5,13 +5,15 @@ import { useWizardStore } from "@/hooks/useWizardStore";
 import { cn } from "@/lib/utils/cn";
 import { ChevronDown, CheckCircle, XCircle, Minus } from "lucide-react";
 import type { ItemInspecao, SituacaoItem } from "@/types/database";
+import { NOMES_SECOES } from "@/lib/laudos/seed";
 
+// Ordem exata das seções conforme laudo
 const SECOES = [
-  { id: "5.1", nome: "Estrutura e Componentes Mecânicos" },
-  { id: "5.2", nome: "Sistema Hidráulico" },
-  { id: "5.3", nome: "Estabilizadores e Fixação" },
-  { id: "5.4", nome: "Acessórios de Carga e Içamento" },
-  { id: "5.5", nome: "Dispositivos de Segurança" },
+  { id: "5.1", nome: NOMES_SECOES["5.1"] },
+  { id: "5.2", nome: NOMES_SECOES["5.2"] },
+  { id: "5.3", nome: NOMES_SECOES["5.3"] },
+  { id: "5.4", nome: NOMES_SECOES["5.4"] },
+  { id: "5.5", nome: NOMES_SECOES["5.5"] },
 ];
 
 function ItemInspecaoRow({
@@ -19,29 +21,29 @@ function ItemInspecaoRow({
   onChange,
 }: {
   item: ItemInspecao;
-  onChange: (id: string, campo: string, valor: any) => void;
+  onChange: (id: string, campo: string, valor: string) => void;
 }) {
-  const opcoes: { valor: SituacaoItem; label: string; cor: string }[] = [
-    { valor: "aprovado", label: "Aprovado", cor: "text-green-600" },
-    { valor: "reprovado", label: "Reprovado", cor: "text-red-600" },
-    { valor: "nao_se_aplica", label: "N/A", cor: "text-gray-400" },
+  const opcoes: { valor: SituacaoItem; label: string; cor: string; ringCor: string }[] = [
+    { valor: "aprovado",      label: "Aprovado",  cor: "text-green-600", ringCor: "border-green-500 bg-green-500" },
+    { valor: "reprovado",     label: "Reprovado", cor: "text-red-600",   ringCor: "border-red-500 bg-red-500"   },
+    { valor: "nao_se_aplica", label: "N/A",       cor: "text-gray-400",  ringCor: "border-gray-400 bg-gray-400" },
   ];
 
   return (
     <div className="border-b border-gray-100 py-3 last:border-0">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 shrink-0 text-xs font-medium text-gray-400">
+        <span className="mt-0.5 shrink-0 w-10 text-xs font-medium text-gray-400">
           {item.numero_item}
         </span>
         <div className="flex-1">
           <p className="text-sm text-gray-700">{item.descricao}</p>
-          <div className="mt-2 flex gap-3">
+          <div className="mt-2 flex flex-wrap gap-4">
             {opcoes.map((op) => (
               <label
                 key={op.valor}
                 className={cn(
-                  "flex cursor-pointer items-center gap-1.5 text-xs font-medium",
-                  item.situacao === op.valor ? op.cor : "text-gray-400"
+                  "flex cursor-pointer items-center gap-1.5 text-xs font-medium transition-colors",
+                  item.situacao === op.valor ? op.cor : "text-gray-400 hover:text-gray-600"
                 )}
               >
                 <input
@@ -54,13 +56,7 @@ function ItemInspecaoRow({
                 <div
                   className={cn(
                     "h-4 w-4 rounded-full border-2 transition-colors",
-                    item.situacao === op.valor
-                      ? op.valor === "aprovado"
-                        ? "border-green-500 bg-green-500"
-                        : op.valor === "reprovado"
-                        ? "border-red-500 bg-red-500"
-                        : "border-gray-400 bg-gray-400"
-                      : "border-gray-300"
+                    item.situacao === op.valor ? op.ringCor : "border-gray-300"
                   )}
                 />
                 {op.label}
@@ -72,8 +68,8 @@ function ItemInspecaoRow({
             <textarea
               value={item.observacoes || ""}
               onChange={(e) => onChange(item.id, "observacoes", e.target.value)}
-              className="input-field mt-2"
-              placeholder="Observações (obrigatório para itens reprovados)"
+              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder="Descreva a não conformidade encontrada..."
               rows={2}
             />
           )}
@@ -86,11 +82,8 @@ function ItemInspecaoRow({
 export function EtapaInspecoes() {
   const { laudo, setSalvando, proximaEtapa, etapaAnterior, atualizarSecao } = useWizardStore();
   const [secaoAberta, setSecaoAberta] = useState<string>("5.1");
-  const [itens, setItens] = useState<ItemInspecao[]>(
-    laudo?.itens_inspecao || []
-  );
+  const [itens, setItens] = useState<ItemInspecao[]>(laudo?.itens_inspecao || []);
 
-  // Contadores por seção
   const contadores = useMemo(() => {
     const result: Record<string, { total: number; avaliados: number; reprovados: number }> = {};
     for (const secao of SECOES) {
@@ -104,18 +97,16 @@ export function EtapaInspecoes() {
     return result;
   }, [itens]);
 
-  function handleItemChange(id: string, campo: string, valor: any) {
+  function handleItemChange(id: string, campo: string, valor: string) {
     setItens((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, [campo]: valor } : item
-      )
+      prev.map((item) => (item.id === id ? { ...item, [campo]: valor } : item))
     );
   }
 
   async function salvarEAvancar() {
     setSalvando(true);
     try {
-      const itensModificados = itens
+      const payload = itens
         .filter((i) => i.situacao)
         .map((i) => ({
           id: i.id,
@@ -127,7 +118,7 @@ export function EtapaInspecoes() {
       const res = await fetch(`/api/laudos/${laudo!.id}/inspecoes`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itens: itensModificados }),
+        body: JSON.stringify({ itens: payload }),
       });
 
       if (res.ok) {
@@ -141,23 +132,28 @@ export function EtapaInspecoes() {
 
   const totalAvaliados = itens.filter((i) => i.situacao).length;
   const totalItens = itens.length;
+  const totalReprovados = itens.filter((i) => i.situacao === "reprovado").length;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Itens de Inspeção
-        </h2>
-        <span className="text-sm text-gray-500">
-          {totalAvaliados}/{totalItens} avaliados
-        </span>
+        <h2 className="text-lg font-semibold text-gray-900">Itens de Inspeção</h2>
+        <div className="flex items-center gap-3 text-sm">
+          {totalReprovados > 0 && (
+            <span className="font-medium text-red-600">{totalReprovados} reprovado{totalReprovados !== 1 ? "s" : ""}</span>
+          )}
+          <span className="text-gray-500">{totalAvaliados}/{totalItens}</span>
+        </div>
       </div>
 
       {/* Progresso geral */}
-      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+      <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
         <div
-          className="h-full rounded-full bg-primary-500 transition-all"
-          style={{ width: `${(totalAvaliados / totalItens) * 100}%` }}
+          className={cn(
+            "h-full rounded-full transition-all",
+            totalReprovados > 0 ? "bg-red-500" : "bg-blue-500"
+          )}
+          style={{ width: totalItens > 0 ? `${(totalAvaliados / totalItens) * 100}%` : "0%" }}
         />
       </div>
 
@@ -167,30 +163,33 @@ export function EtapaInspecoes() {
           const aberta = secaoAberta === secao.id;
           const cont = contadores[secao.id];
           const itensSecao = itens.filter((i) => i.secao === secao.id);
-          const completa = cont.avaliados === cont.total;
+          const completa = cont.avaliados === cont.total && cont.total > 0;
 
           return (
-            <div key={secao.id} className="rounded-lg border border-gray-200 bg-white">
+            <div key={secao.id} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <button
                 onClick={() => setSecaoAberta(aberta ? "" : secao.id)}
-                className="flex w-full items-center justify-between px-4 py-3"
+                className="flex w-full items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   {completa ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
                   ) : cont.reprovados > 0 ? (
-                    <XCircle className="h-5 w-5 text-red-500" />
+                    <XCircle className="h-5 w-5 shrink-0 text-red-500" />
                   ) : (
-                    <Minus className="h-5 w-5 text-gray-300" />
+                    <Minus className="h-5 w-5 shrink-0 text-gray-300" />
                   )}
-                  <span className="text-sm font-medium text-gray-900">
-                    {secao.id} - {secao.nome}
+                  <span className="text-sm font-medium text-gray-900 text-left">
+                    {secao.id} — {secao.nome}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">
-                    {cont.avaliados}/{cont.total}
-                  </span>
+                <div className="flex items-center gap-2 ml-2 shrink-0">
+                  {cont.reprovados > 0 && (
+                    <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                      {cont.reprovados} reprovado{cont.reprovados !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-500">{cont.avaliados}/{cont.total}</span>
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 text-gray-400 transition-transform",

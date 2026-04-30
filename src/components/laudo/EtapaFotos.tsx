@@ -5,25 +5,32 @@ import { useWizardStore } from "@/hooks/useWizardStore";
 import { Camera, X, Loader2 } from "lucide-react";
 import type { TipoFoto } from "@/types/database";
 
-const FOTOS_OBRIGATORIAS: { tipo: TipoFoto; label: string }[] = [
-  { tipo: "capa", label: "Foto de Capa" },
-  { tipo: "placa", label: "Placa do Veículo" },
-  { tipo: "guindaste", label: "Guindaste (visão geral)" },
-  { tipo: "alavancas", label: "Alavancas de Comando" },
-  { tipo: "plaqueta", label: "Plaqueta de Identificação" },
-  { tipo: "grafico_cargas", label: "Gráfico de Cargas" },
-  { tipo: "mangueiras", label: "Mangueiras Hidráulicas" },
-  { tipo: "estabilizadores", label: "Estabilizadores (Patolas)" },
-  { tipo: "horimetro", label: "Horímetro" },
+// Ordem canônica e labels de exibição (espelha o PDF)
+export const FOTOS_CONFIG: { tipo: TipoFoto; label: string; obrigatorio: boolean }[] = [
+  { tipo: "capa",                  label: "Foto 1 — Capa (vista geral)",              obrigatorio: true  },
+  { tipo: "placa",                 label: "Foto 2 — Placa do Veículo",                obrigatorio: true  },
+  { tipo: "guindaste",             label: "Foto 3 — Guindaste (visão geral)",         obrigatorio: true  },
+  { tipo: "alavancas",             label: "Foto 4 — Alavancas de Acionamento",        obrigatorio: true  },
+  { tipo: "botao_emergencia",      label: "Foto 5 — Botão de Emergência",             obrigatorio: true  },
+  { tipo: "controle_remoto",       label: "Foto 6 — Controle Remoto",                obrigatorio: true  },
+  { tipo: "plaqueta",              label: "Foto 7 — Plaqueta do Guindaste",           obrigatorio: true  },
+  { tipo: "tabela_cargas",         label: "Foto 8 — Tabela de Cargas",               obrigatorio: true  },
+  { tipo: "grafico_cargas",        label: "Foto 9 — Gráfico de Cargas",              obrigatorio: true  },
+  { tipo: "mangueiras",            label: "Foto 10 — Mangueiras Hidráulicas",         obrigatorio: true  },
+  { tipo: "valvulas",              label: "Foto 11 — Válvulas",                       obrigatorio: true  },
+  { tipo: "estabilizadores",       label: "Foto 12 — Estabilizadores (Patolas)",      obrigatorio: true  },
+  { tipo: "horimetro",             label: "Foto 13 — Horímetro",                     obrigatorio: true  },
+  { tipo: "lateral_dianteira_esq", label: "Foto 14 — Lateral Dianteira 45° Esq.",    obrigatorio: true  },
+  { tipo: "lateral_dianteira_dir", label: "Foto 15 — Lateral Dianteira 45° Dir.",    obrigatorio: true  },
+  { tipo: "lateral_traseira_esq",  label: "Foto 16 — Lateral Traseira 45° Esq.",     obrigatorio: true  },
+  { tipo: "lateral_traseira_dir",  label: "Foto 17 — Lateral Traseira 45° Dir.",     obrigatorio: true  },
+  { tipo: "extra_1",               label: "Foto 18 — Extra (opcional)",               obrigatorio: false },
+  { tipo: "extra_2",               label: "Foto 19 — Extra (opcional)",               obrigatorio: false },
+  { tipo: "extra_3",               label: "Foto 20 — Extra (opcional)",               obrigatorio: false },
 ];
 
-const FOTOS_EXTRAS: { tipo: TipoFoto; label: string }[] = [
-  { tipo: "extra_1", label: "Extra 1" },
-  { tipo: "extra_2", label: "Extra 2" },
-  { tipo: "extra_3", label: "Extra 3" },
-  { tipo: "extra_4", label: "Extra 4" },
-  { tipo: "extra_5", label: "Extra 5" },
-];
+const FOTOS_OBRIGATORIAS = FOTOS_CONFIG.filter((f) => f.obrigatorio);
+const FOTOS_EXTRAS = FOTOS_CONFIG.filter((f) => !f.obrigatorio);
 
 function SlotFoto({
   tipo,
@@ -66,10 +73,9 @@ function SlotFoto({
       });
 
       const blob = await new Promise<Blob>((resolve) =>
-        canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.8)
+        canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.82)
       );
 
-      // Upload via API route (que usa Vercel Blob)
       const formData = new FormData();
       formData.append("arquivo", new File([blob], `${tipo}.jpg`, { type: "image/jpeg" }));
       formData.append("tipo", tipo);
@@ -89,35 +95,37 @@ function SlotFoto({
   }
 
   return (
-    <div className="relative aspect-[4/3] overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
-      {fotoUrl ? (
-        <>
-          <img src={fotoUrl} alt={label} className="h-full w-full object-cover" />
-          <button
-            onClick={() => onRemove(tipo)}
-            className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white shadow"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </>
-      ) : (
-        <label className="flex h-full cursor-pointer flex-col items-center justify-center gap-2">
-          {uploading ? (
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-          ) : (
-            <Camera className="h-6 w-6 text-gray-400" />
-          )}
-          <span className="text-center text-xs text-gray-500">{label}</span>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFile}
-            className="sr-only"
-            disabled={uploading}
-          />
-        </label>
-      )}
+    <div className="flex flex-col gap-1">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
+        {fotoUrl ? (
+          <>
+            <img src={fotoUrl} alt={label} className="h-full w-full object-cover" />
+            <button
+              onClick={() => onRemove(tipo)}
+              className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white shadow"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </>
+        ) : (
+          <label className="flex h-full cursor-pointer flex-col items-center justify-center gap-2">
+            {uploading ? (
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            ) : (
+              <Camera className="h-6 w-6 text-gray-400" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFile}
+              className="sr-only"
+              disabled={uploading}
+            />
+          </label>
+        )}
+      </div>
+      <p className="text-center text-xs text-gray-500 leading-tight">{label}</p>
     </div>
   );
 }
@@ -133,6 +141,8 @@ export function EtapaFotos() {
     )
   );
 
+  const obrigatoriasConcluidas = FOTOS_OBRIGATORIAS.filter((f) => fotos[f.tipo]).length;
+
   function handleUpload(tipo: TipoFoto, url: string) {
     setFotos((prev) => ({ ...prev, [tipo]: url }));
   }
@@ -147,14 +157,23 @@ export function EtapaFotos() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-gray-900">
-        Relatório Fotográfico
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">Relatório Fotográfico</h2>
+        <span className="text-sm text-gray-500">
+          {obrigatoriasConcluidas}/{FOTOS_OBRIGATORIAS.length} obrigatórias
+        </span>
+      </div>
+
+      {/* Barra de progresso */}
+      <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
+        <div
+          className="h-full rounded-full bg-blue-500 transition-all"
+          style={{ width: `${(obrigatoriasConcluidas / FOTOS_OBRIGATORIAS.length) * 100}%` }}
+        />
+      </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-medium text-gray-700">
-          Fotos Obrigatórias
-        </h3>
+        <h3 className="mb-3 text-sm font-medium text-gray-700">Fotos Obrigatórias</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {FOTOS_OBRIGATORIAS.map((slot) => (
             <SlotFoto
@@ -171,9 +190,7 @@ export function EtapaFotos() {
       </div>
 
       <div>
-        <h3 className="mb-3 text-sm font-medium text-gray-700">
-          Fotos Extras (opcional)
-        </h3>
+        <h3 className="mb-3 text-sm font-medium text-gray-700">Fotos Extras (opcional)</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {FOTOS_EXTRAS.map((slot) => (
             <SlotFoto

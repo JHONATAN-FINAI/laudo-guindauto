@@ -12,12 +12,32 @@ export const statusLaudoEnum = pgEnum("status_laudo", ["rascunho", "finalizado"]
 export const conclusaoLaudoEnum = pgEnum("conclusao_laudo", ["apto", "nao_apto"]);
 export const situacaoItemEnum = pgEnum("situacao_item", ["aprovado", "reprovado", "nao_se_aplica"]);
 export const tipoFotoEnum = pgEnum("tipo_foto", [
-  "capa", "placa", "guindaste", "alavancas", "plaqueta",
-  "grafico_cargas", "mangueiras", "estabilizadores", "horimetro",
-  "extra_1", "extra_2", "extra_3", "extra_4", "extra_5",
+  // Fotos principais (1–13)
+  "capa",               // 1 – capa
+  "placa",              // 2 – placa do veículo
+  "guindaste",          // 3 – guindaste visão geral
+  "alavancas",          // 4 – alavancas de acionamento
+  "botao_emergencia",   // 5 – botão de emergência
+  "controle_remoto",    // 6 – controle remoto
+  "plaqueta",           // 7 – plaqueta do guindaste
+  "tabela_cargas",      // 8 – tabela de cargas
+  "grafico_cargas",     // 9 – gráfico de cargas
+  "mangueiras",         // 10 – mangueiras hidráulicas
+  "valvulas",           // 11 – válvulas
+  "estabilizadores",    // 12 – estabilizadores (patolas)
+  "horimetro",          // 13 – horímetro
+  // Ângulos (14–17)
+  "lateral_dianteira_esq",  // 14 – lateral dianteira 45° esq
+  "lateral_dianteira_dir",  // 15 – lateral dianteira 45° dir
+  "lateral_traseira_esq",   // 16 – lateral traseira 45° esq
+  "lateral_traseira_dir",   // 17 – lateral traseira 45° dir
+  // Extras (18–20)
+  "extra_1",
+  "extra_2",
+  "extra_3",
 ]);
 
-// Tabela de usuários (substitui Supabase Auth + tabela users)
+// Tabela de usuários
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
@@ -116,13 +136,13 @@ export const fotos_laudo = pgTable("fotos_laudo", {
   id: uuid("id").defaultRandom().primaryKey(),
   laudo_id: uuid("laudo_id").notNull().references(() => laudos.id, { onDelete: "cascade" }),
   tipo: tipoFotoEnum("tipo").notNull(),
-  storage_url: text("storage_url").notNull(), // URL do Vercel Blob
+  storage_url: text("storage_url").notNull(),
   legenda: text("legenda"),
   ordem: integer("ordem").default(0).notNull(),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Modelos de implemento (para autocomplete futuro)
+// Modelos de implemento
 export const modelos_implemento = pgTable("modelos_implemento", {
   id: uuid("id").defaultRandom().primaryKey(),
   fabricante: text("fabricante").notNull(),
@@ -135,7 +155,7 @@ export const modelos_implemento = pgTable("modelos_implemento", {
   angulo_giro: text("angulo_giro"),
 });
 
-// Modelos de veículo (para autocomplete futuro)
+// Modelos de veículo
 export const modelos_veiculo = pgTable("modelos_veiculo", {
   id: uuid("id").defaultRandom().primaryKey(),
   marca: text("marca").notNull(),
@@ -143,7 +163,7 @@ export const modelos_veiculo = pgTable("modelos_veiculo", {
   tipo: text("tipo"),
 });
 
-// Textos padrão (para o template do PDF)
+// Textos padrão
 export const textos_padrao = pgTable("textos_padrao", {
   id: uuid("id").defaultRandom().primaryKey(),
   chave: text("chave").notNull().unique(),
