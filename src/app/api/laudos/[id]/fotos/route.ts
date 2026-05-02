@@ -3,11 +3,33 @@ import { laudos, fotos_laudo } from "@/lib/db/schema";
 import { getSessionUserId } from "@/lib/auth-helpers";
 import { eq, and, asc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { neon } from "@neondatabase/serverless";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
 
 type Params = { params: Promise<{ id: string }> };
 
-// Vercel Blob é obrigatório em produção
 const HAS_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+// Garante que o enum tem todos os valores necessários antes de qualquer INSERT
+async function ensureEnumValues() {
+  const rawSql = neon(process.env.DATABASE_URL!);
+  const valores = [
+    "capa","placa","guindaste","alavancas",
+    "botao_emergencia","controle_remoto","plaqueta",
+    "tabela_cargas","grafico_cargas","mangueiras",
+    "valvulas","estabilizadores","horimetro",
+    "lateral_dianteira_esq","lateral_dianteira_dir",
+    "lateral_traseira_esq","lateral_traseira_dir",
+    "extra_1","extra_2","extra_3",
+  ];
+  for (const v of valores) {
+    try {
+      await rawSql(`ALTER TYPE tipo_foto ADD VALUE IF NOT EXISTS '${v}'`);
+    } catch { /* já existe ou outro erro não crítico */ }
+  }
+}
 
 async function uploadArquivo(arquivo: File, pathname: string): Promise<string> {
   if (HAS_BLOB) {
@@ -18,21 +40,18 @@ async function uploadArquivo(arquivo: File, pathname: string): Promise<string> {
     });
     return blob.url;
   }
-
-  // Fallback local (apenas dev): salva em /tmp que é gravável até em serverless
+  // Fallback dev — salva em /tmp
   const { writeFile, mkdir } = await import("fs/promises");
   const path = await import("path");
   const dir = path.join("/tmp", "uploads", path.dirname(pathname));
   await mkdir(dir, { recursive: true });
   const filePath = path.join("/tmp", "uploads", pathname);
-  const buffer = Buffer.from(await arquivo.arrayBuffer());
-  await writeFile(filePath, buffer);
-  // Retorna URL pública servida pela rota /api/uploads/[...path]
+  await writeFile(filePath, Buffer.from(await arquivo.arrayBuffer()));
   return `/api/uploads/${pathname}`;
 }
 
-async function deleteArquivo(url: string): Promise<void> {
-  if (!HAS_BLOB || !url.includes("vercel-storage") && !url.includes("blob.vercel")) return;
+async function deleteArquivo(url: string) {
+  if (!HAS_BLOB || (!url.includes("vercel-storage") && !url.includes("blob.vercel"))) return;
   try {
     const { del } = await import("@vercel/blob");
     await del(url);
@@ -45,18 +64,12 @@ export async function GET(_: NextRequest, { params }: Params) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const [laudo] = await db
-    .select({ id: laudos.id })
-    .from(laudos)
-    .where(and(eq(laudos.id, id), eq(laudos.user_id, userId)))
-    .limit(1);
-  if (!laudo) return NextResponse.json({ error: "Laudo não encontrado" }, { status: 404 });
+  const [laudo] = await db.select({ id: laudos.id }).from(laudos)
+    .where(and(eq(laudos.id, id), eq(laudos.user_id, userId))).limit(1);
+  if (!laudo) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
-  const fotos = await db
-    .select()
-    .from(fotos_laudo)
-    .where(eq(fotos_laudo.laudo_id, id))
-    .orderBy(asc(fotos_laudo.ordem));
+  const fotos = await db.select().from(fotos_laudo)
+    .where(eq(fotos_laudo.laudo_id, id)).orderBy(asc(fotos_laudo.ordem));
 
   return NextResponse.json(fotos);
 }
@@ -67,14 +80,18 @@ export async function POST(request: NextRequest, { params }: Params) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const [laudo] = await db
-    .select({ id: laudos.id, status: laudos.status })
-    .from(laudos)
-    .where(and(eq(laudos.id, id), eq(laudos.user_id, userId)))
-    .limit(1);
-  if (!laudo) return NextResponse.json({ error: "Laudo não encontrado" }, { status: 404 });
+  const [laudo] = await db.select({ id: laudos.id, status: laudos.status }).from(laudos)
+    .where(and(eq(laudos.id, id), eq(laudos.user_id, userId))).limit(1);
+  if (!laudo) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   if (laudo.status === "finalizado")
-    return NextResponse.json({ error: "Laudo finalizado não pode ser editado" }, { status: 400 });
+    return NextResponse.json({ error: "Laudo finalizado" }, { status: 400 });
+
+  if (!HAS_BLOB) {
+    return NextResponse.json(
+      { error: "Armazenamento não configurado. Adicione BLOB_READ_WRITE_TOKEN nas variáveis de ambiente da Vercel." },
+      { status: 500 }
+    );
+  }
 
   let formData: FormData;
   try {
@@ -95,65 +112,52 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Arquivo muito grande (máx 8MB)" }, { status: 413 });
   }
 
-  // Normaliza extensão — canvas comprimido sempre vira .jpg
-  const extensao = arquivo.type === "image/png" ? "png" : arquivo.type === "image/webp" ? "webp" : "jpg";
-  const pathname = `laudos/${userId}/${id}/${tipo}_${Date.now()}.${extensao}`;
+  // Garante enum atualizado antes do INSERT
+  await ensureEnumValues();
+
+  const ext = arquivo.type === "image/png" ? "png" : "jpg";
+  const pathname = `laudos/${userId}/${id}/${tipo}_${Date.now()}.${ext}`;
 
   let storageUrl: string;
   try {
     storageUrl = await uploadArquivo(arquivo, pathname);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Erro no upload:", err);
     return NextResponse.json(
-      { error: "Falha no upload. Verifique a variável BLOB_READ_WRITE_TOKEN." },
+      { error: `Falha no upload: ${err?.message || "erro desconhecido"}` },
       { status: 500 }
     );
   }
 
-  // Substitui foto existente do mesmo tipo (exceto extras que podem ser múltiplas)
+  // Remove foto anterior do mesmo tipo (exceto extras)
   if (!tipo.startsWith("extra_")) {
     try {
-      const [fotoExistente] = await db
-        .select()
-        .from(fotos_laudo)
-        .where(and(eq(fotos_laudo.laudo_id, id), eq(fotos_laudo.tipo, tipo as any)))
-        .limit(1);
-
-      if (fotoExistente) {
-        await deleteArquivo(fotoExistente.storage_url);
-        await db.delete(fotos_laudo).where(eq(fotos_laudo.id, fotoExistente.id));
+      const [antiga] = await db.select().from(fotos_laudo)
+        .where(and(eq(fotos_laudo.laudo_id, id), eq(fotos_laudo.tipo, tipo as any))).limit(1);
+      if (antiga) {
+        await deleteArquivo(antiga.storage_url);
+        await db.delete(fotos_laudo).where(eq(fotos_laudo.id, antiga.id));
       }
-    } catch { /* continua mesmo se delete falhar */ }
+    } catch { /* continua */ }
   }
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
-    .from(fotos_laudo)
-    .where(eq(fotos_laudo.laudo_id, id));
+    .from(fotos_laudo).where(eq(fotos_laudo.laudo_id, id));
 
   try {
-    const [foto] = await db
-      .insert(fotos_laudo)
-      .values({
-        laudo_id: id,
-        tipo: tipo as any,
-        storage_url: storageUrl,
-        legenda,
-        ordem: (count || 0) + 1,
-      })
-      .returning();
+    const [foto] = await db.insert(fotos_laudo).values({
+      laudo_id: id,
+      tipo: tipo as any,
+      storage_url: storageUrl,
+      legenda,
+      ordem: (count || 0) + 1,
+    }).returning();
 
     return NextResponse.json({ ...foto, url: storageUrl }, { status: 201 });
   } catch (err: any) {
-    console.error("Erro ao salvar foto no banco:", err);
-    // Erro de enum = tipo não existe no banco
-    if (err?.message?.includes("invalid input value for enum")) {
-      return NextResponse.json(
-        { error: `Tipo de foto inválido no banco: "${tipo}". Execute a migration SQL para adicionar o valor ao enum tipo_foto.` },
-        { status: 422 }
-      );
-    }
-    return NextResponse.json({ error: "Erro ao salvar foto" }, { status: 500 });
+    console.error("Erro ao salvar foto:", err);
+    return NextResponse.json({ error: `Erro ao salvar: ${err?.message}` }, { status: 500 });
   }
 }
 
@@ -166,18 +170,12 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   const fotoId = request.nextUrl.searchParams.get("fotoId");
   if (!fotoId) return NextResponse.json({ error: "fotoId obrigatório" }, { status: 400 });
 
-  const [laudo] = await db
-    .select({ id: laudos.id })
-    .from(laudos)
-    .where(and(eq(laudos.id, id), eq(laudos.user_id, userId)))
-    .limit(1);
+  const [laudo] = await db.select({ id: laudos.id }).from(laudos)
+    .where(and(eq(laudos.id, id), eq(laudos.user_id, userId))).limit(1);
   if (!laudo) return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
 
-  const [foto] = await db
-    .select()
-    .from(fotos_laudo)
-    .where(and(eq(fotos_laudo.id, fotoId), eq(fotos_laudo.laudo_id, id)))
-    .limit(1);
+  const [foto] = await db.select().from(fotos_laudo)
+    .where(and(eq(fotos_laudo.id, fotoId), eq(fotos_laudo.laudo_id, id))).limit(1);
 
   if (foto) {
     await deleteArquivo(foto.storage_url);
