@@ -9,48 +9,63 @@ import { FOTOS_CONFIG } from "@/lib/laudos/constants";
 const FOTOS_OBRIGATORIAS = FOTOS_CONFIG.filter((f) => f.obrigatorio);
 const FOTOS_EXTRAS = FOTOS_CONFIG.filter((f) => !f.obrigatorio);
 
+interface FotoState {
+  url: string;
+  id?: string; // id do registro no banco para poder deletar
+}
+
 function SlotFoto({
   tipo,
   label,
-  fotoUrl,
+  foto,
   laudoId,
   onUpload,
   onRemove,
 }: {
   tipo: TipoFoto;
   label: string;
-  fotoUrl: string | null;
+  foto: FotoState | null;
   laudoId: string;
-  onUpload: (tipo: TipoFoto, url: string) => void;
-  onRemove: (tipo: TipoFoto) => void;
+  onUpload: (tipo: TipoFoto, foto: FotoState) => void;
+  onRemove: (tipo: TipoFoto, fotoId?: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Limpa o input para permitir reenvio do mesmo arquivo
+    e.target.value = "";
 
     setUploading(true);
+    setErro(null);
+
     try {
-      // Compressão básica via canvas
+      // Compressão via canvas — reduz para max 1600px, 82% qualidade
       const img = new Image();
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d")!;
 
-      await new Promise<void>((resolve) => {
-        img.onload = () => {
-          const maxW = 1600;
-          const scale = Math.min(1, maxW / img.width);
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve();
-        };
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Erro ao carregar imagem"));
         img.src = URL.createObjectURL(file);
       });
 
-      const blob = await new Promise<Blob>((resolve) =>
-        canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.82)
+      const maxW = 1600;
+      const scale = Math.min(1, maxW / img.width);
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(img.src);
+
+      const blob = await new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error("Falha na compressão"))),
+          "image/jpeg",
+          0.82
+        )
       );
 
       const formData = new FormData();
@@ -62,34 +77,60 @@ function SlotFoto({
         body: formData,
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        onUpload(tipo, data.url || data.storage_url);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Erro ${res.status}`);
       }
+
+      const data = await res.json();
+      onUpload(tipo, { url: data.url || data.storage_url, id: data.id });
+    } catch (err: any) {
+      setErro(err?.message || "Falha no upload");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleRemove() {
+    onRemove(tipo, foto?.id);
+    // Deleta do banco em background (não bloqueia a UI)
+    if (foto?.id) {
+      fetch(`/api/laudos/${laudoId}/fotos?fotoId=${foto.id}`, {
+        method: "DELETE",
+      }).catch(() => {});
     }
   }
 
   return (
     <div className="flex flex-col gap-1">
       <div className="relative aspect-[4/3] overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
-        {fotoUrl ? (
+        {foto?.url ? (
           <>
-            <img src={fotoUrl} alt={label} className="h-full w-full object-cover" />
+            <img
+              src={foto.url}
+              alt={label}
+              className="h-full w-full object-cover"
+            />
             <button
-              onClick={() => onRemove(tipo)}
-              className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white shadow"
+              onClick={handleRemove}
+              className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white shadow hover:bg-red-600"
+              title="Remover foto"
             >
               <X className="h-3 w-3" />
             </button>
           </>
         ) : (
-          <label className="flex h-full cursor-pointer flex-col items-center justify-center gap-2">
+          <label className="flex h-full cursor-pointer flex-col items-center justify-center gap-2 hover:bg-gray-100 transition-colors">
             {uploading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <>
+                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <span className="text-xs text-gray-400">Enviando...</span>
+              </>
             ) : (
-              <Camera className="h-6 w-6 text-gray-400" />
+              <>
+                <Camera className="h-6 w-6 text-gray-400" />
+                <span className="text-xs text-gray-400">Toque para adicionar</span>
+              </>
             )}
             <input
               type="file"
@@ -102,26 +143,37 @@ function SlotFoto({
           </label>
         )}
       </div>
+
       <p className="text-center text-xs text-gray-500 leading-tight">{label}</p>
+
+      {erro && (
+        <p className="text-center text-xs text-red-500 leading-tight">{erro}</p>
+      )}
     </div>
   );
 }
 
 export function EtapaFotos() {
   const { laudo, proximaEtapa, etapaAnterior } = useWizardStore();
-  const [fotos, setFotos] = useState<Record<string, string>>(
+
+  // Estado com url + id para cada tipo de foto
+  const [fotos, setFotos] = useState<Record<string, FotoState>>(() =>
     Object.fromEntries(
-      (laudo?.fotos || []).map((f: { tipo: string; storage_url?: string; url?: string }) => [
-        f.tipo,
-        f.storage_url || f.url || "",
-      ])
+      (laudo?.fotos || [])
+        .filter((f: any) => f.storage_url || f.url)
+        .map((f: any) => [
+          f.tipo,
+          { url: f.storage_url || f.url, id: f.id },
+        ])
     )
   );
 
-  const obrigatoriasConcluidas = FOTOS_OBRIGATORIAS.filter((f) => fotos[f.tipo]).length;
+  const obrigatoriasConcluidas = FOTOS_OBRIGATORIAS.filter(
+    (f) => fotos[f.tipo]?.url
+  ).length;
 
-  function handleUpload(tipo: TipoFoto, url: string) {
-    setFotos((prev) => ({ ...prev, [tipo]: url }));
+  function handleUpload(tipo: TipoFoto, novaFoto: FotoState) {
+    setFotos((prev) => ({ ...prev, [tipo]: novaFoto }));
   }
 
   function handleRemove(tipo: TipoFoto) {
@@ -141,22 +193,28 @@ export function EtapaFotos() {
         </span>
       </div>
 
+      {/* Progresso */}
       <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
         <div
-          className="h-full rounded-full bg-blue-500 transition-all"
-          style={{ width: `${(obrigatoriasConcluidas / FOTOS_OBRIGATORIAS.length) * 100}%` }}
+          className="h-full rounded-full bg-blue-500 transition-all duration-300"
+          style={{
+            width: `${(obrigatoriasConcluidas / FOTOS_OBRIGATORIAS.length) * 100}%`,
+          }}
         />
       </div>
 
+      {/* Fotos obrigatórias */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-gray-700">Fotos Obrigatórias</h3>
+        <h3 className="mb-3 text-sm font-medium text-gray-700">
+          Fotos Obrigatórias
+        </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {FOTOS_OBRIGATORIAS.map((slot) => (
             <SlotFoto
               key={slot.tipo}
               tipo={slot.tipo as TipoFoto}
               label={slot.label}
-              fotoUrl={fotos[slot.tipo] || null}
+              foto={fotos[slot.tipo] || null}
               laudoId={laudo!.id}
               onUpload={handleUpload}
               onRemove={handleRemove}
@@ -165,15 +223,18 @@ export function EtapaFotos() {
         </div>
       </div>
 
+      {/* Fotos extras */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-gray-700">Fotos Extras (opcional)</h3>
+        <h3 className="mb-3 text-sm font-medium text-gray-700">
+          Fotos Extras (opcional)
+        </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {FOTOS_EXTRAS.map((slot) => (
             <SlotFoto
               key={slot.tipo}
               tipo={slot.tipo as TipoFoto}
               label={slot.label}
-              fotoUrl={fotos[slot.tipo] || null}
+              foto={fotos[slot.tipo] || null}
               laudoId={laudo!.id}
               onUpload={handleUpload}
               onRemove={handleRemove}
@@ -182,9 +243,13 @@ export function EtapaFotos() {
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <button onClick={etapaAnterior} className="btn-secondary">Voltar</button>
-        <button onClick={proximaEtapa} className="btn-primary">Avançar</button>
+      <div className="flex justify-between pt-2">
+        <button onClick={etapaAnterior} className="btn-secondary">
+          Voltar
+        </button>
+        <button onClick={proximaEtapa} className="btn-primary">
+          Avançar
+        </button>
       </div>
     </div>
   );
