@@ -46,6 +46,18 @@ function formatarDataExtenso(data: string | null | undefined): string {
   });
 }
 
+
+function formatarNumeroLaudo(numero: string | null | undefined): string {
+  if (!numero) return "___/____";
+  // Se já está no formato NNNN/AAAA, retorna como está
+  // Se está em AAAA/NNNN (ex: 2026/0001), inverte para 0001/2026
+  const partes = numero.split("/");
+  if (partes.length === 2 && partes[0].length === 4 && parseInt(partes[0]) > 1000) {
+    return `${partes[1]}/${partes[0]}`;
+  }
+  return numero;
+}
+
 function cb(marcado: boolean): string {
   return marcado ? `<span style="font-weight:bold;">(x)</span>` : `<span style="color:#999;">( )</span>`;
 }
@@ -158,115 +170,107 @@ ${blocos}`;
 // Anexo 02 — Inspeções e Ensaios Frequentes (checklist do operador)
 // Replicado exatamente conforme o laudo original
 // ---------------------------------------------------------------------------
-function gerarAnexo02(veiculo: any, repeticoes = 5): string {
+function gerarAnexo02(_veiculo: any, repeticoes = 5): string {
+  const campo = `<td style="border:0.5pt solid #999; width:18px; text-align:center; font-weight:bold; font-size:8pt;"></td>`;
+
   const tabela = () => `
-    <table style="width:100%; border-collapse:collapse; font-size:8.5pt; margin-bottom:6mm;">
+    <table style="width:100%; border-collapse:collapse; font-size:8pt; margin-bottom:4mm;">
       <thead>
         <tr>
-          <th colspan="2" style="border:1pt solid #999; background:#1e2d48; color:#fff; padding:3mm; text-align:center; font-size:9pt; width:50%;">
-            INSPEÇÕES FEITAS ANTES DO IÇAMENTO DE CARGA
-          </th>
-          <th style="border:1pt solid #999; width:8%; background:#1e2d48;"></th>
-          <th colspan="2" style="border:1pt solid #999; background:#1e2d48; color:#fff; padding:3mm; text-align:center; font-size:9pt; width:50%;">
-            INSPEÇÕES FEITAS ANTES DO IÇAMENTO DE CARGA
-          </th>
-          <th style="border:1pt solid #999; width:8%; background:#1e2d48;"></th>
+          <th colspan="2" style="border:1pt solid #1e2d48; background:#1e2d48; color:#fff; padding:2.5mm 3mm; text-align:center; width:46%;">INSPEÇÕES FEITAS ANTES DO IÇAMENTO DE CARGA</th>
+          <th style="border:1pt solid #1e2d48; background:#1e2d48; color:#fff; padding:1mm; text-align:center; width:18px; font-size:7pt;">A</th>
+          <th style="border:1pt solid #1e2d48; background:#1e2d48; color:#fff; padding:1mm; text-align:center; width:18px; font-size:7pt;">R</th>
+          <th style="border:1pt solid #1e2d48; background:#1e2d48; color:#fff; padding:2.5mm 3mm; text-align:center; width:46%;">INSPEÇÕES FEITAS ANTES DO IÇAMENTO DE CARGA</th>
+          <th style="border:1pt solid #1e2d48; background:#1e2d48; color:#fff; padding:1mm; text-align:center; width:18px; font-size:7pt;">A</th>
+          <th style="border:1pt solid #1e2d48; background:#1e2d48; color:#fff; padding:1mm; text-align:center; width:18px; font-size:7pt;">R</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; font-weight:bold;">Nível de fluidos</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; font-weight:bold;">Danos na Estrutura, lança e pneus</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm; font-weight:bold; background:#f0f0f0;">Nível de fluidos</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm; font-weight:bold; background:#f0f0f0;">Danos na Estrutura, lança e pneus</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">a) Óleo de motor</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">a) Inspeção visual do veículo de danos que possam ter acontecido</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">a) Óleo de motor</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm;">a) Inspeção visual do veículo de danos que possam ter acontecido</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">b) Água do Radiador</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">b) Calibragem dos pneus e remova qualquer material estranho na banda de rodagem</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">b) Água do Radiador</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm;">b) Calibragem dos pneus e remova qualquer material estranho na banda de rodagem</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">c) Óleo Hidráulico</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">c) Inspecionar as roldanas do moitão e da ponta da lança</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">c) Óleo Hidráulico</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm;">c) Inspecionar as roldanas do moitão e da ponta da lança</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; font-weight:bold;">Luzes de Alerta e Equip/Instr. segurança</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">d) verifique as condições dos cabos de aço</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm; font-weight:bold; background:#f0f0f0;">Luzes de Alerta e Equip/Instr. segurança</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm;">d) verifique as condições dos cabos de aço</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">a) Rodas/Aros/Pneus</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">e) Verificar as condições das cintas</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">a) Rodas/Aros/Pneus</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm;">e) Verificar as condições das cintas</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">b) Sistema de Freio</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">F) verificar qualquer tipo de vazamento no sistema hidráulico</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">b) Sistema de Freio</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm;">F) verificar qualquer tipo de vazamento no sistema hidráulico</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">c) Dispositivos de Iluminação Refletores</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; font-weight:bold;">Anotação de qualquer anormalidade, manutenção ou incidente:</td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">c) Dispositivos de Iluminação Refletores</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm; font-weight:bold; background:#f0f0f0;" rowspan="6">Anotação de qualquer anormalidade, manutenção ou incidente:</td>
+          <td style="border:0.5pt solid #999;" rowspan="6"></td><td style="border:0.5pt solid #999;" rowspan="6"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">d) Mecanismo de direção</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; height:8mm;"></td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">d) Mecanismo de direção</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">e) Buzina</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; height:8mm;"></td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">e) Buzina</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">f) Retrovisores</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; height:8mm;"></td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">f) Retrovisores</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">g) Limpador de Para-brisa</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; height:8mm;"></td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">g) Limpador de Para-brisa</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">h) Instrumentos de painéis</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; height:8mm;"></td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">h) Instrumentos de painéis</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
         </tr>
         <tr>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm;">I) Guincho</td>
-          <td style="border:0.5pt solid #999;"></td>
-          <td colspan="2" style="border:0.5pt solid #999; padding:2mm 3mm; height:8mm;"></td>
-          <td style="border:0.5pt solid #999;"></td>
+          <td colspan="2" style="border:0.5pt solid #999; padding:1.5mm 3mm;">I) Guincho</td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+          <td style="border:0.5pt solid #999; padding:1.5mm 3mm;"></td>
+          <td style="border:0.5pt solid #999;"></td><td style="border:0.5pt solid #999;"></td>
+        </tr>
+        <tr style="background:#f9f9f9;">
+          <td colspan="4" style="border:1pt solid #999; padding:2mm 3mm; font-size:8pt;">
+            DATA DA INSPEÇÃO: ______ / ______ / __________
+          </td>
+          <td colspan="3" style="border:1pt solid #999; padding:2mm 3mm; font-size:8pt;">
+            NOME DO OPERADOR: _______________________________
+          </td>
         </tr>
         <tr>
-          <td colspan="2" style="border:1pt solid #999; padding:2mm 3mm;">DATA DA INSPEÇÃO: &nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-          <td style="border:1pt solid #999;"></td>
-          <td colspan="2" style="border:1pt solid #999; padding:2mm 3mm;">NOME DO OPERADOR:</td>
-          <td style="border:1pt solid #999;"></td>
-        </tr>
-        <tr>
-          <td colspan="6" style="border:1pt solid #999; padding:3mm; font-size:10pt; font-weight:bold;">
-            Legenda: &nbsp;&nbsp;&nbsp; A - Aprovado &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; R - Reprovado
+          <td colspan="7" style="border:1pt solid #999; padding:2.5mm 3mm; font-size:9pt; font-weight:bold; background:#f0f0f0;">
+            Legenda: &nbsp;&nbsp; <span style="font-weight:bold;">A</span> - Aprovado &nbsp;&nbsp;&nbsp;&nbsp; <span style="font-weight:bold;">R</span> - Reprovado
           </td>
         </tr>
       </tbody>
@@ -281,6 +285,7 @@ function gerarAnexo02(veiculo: any, repeticoes = 5): string {
 <h2>ANEXO 02 - INSPEÇÕES E ENSAIOS FREQUENTES DO GUINDASTE HIDRÁULICO</h2>
 ${folhas}`;
 }
+
 
 // ---------------------------------------------------------------------------
 // Template principal
@@ -354,7 +359,7 @@ export function buildTemplate(dados: DadosPDF): string {
 <!-- ===================== CAPA ===================== -->
 <div class="capa">
   <h1>Inspeção Periódica para Guindaste Articulado Hidráulico Instalado sobre Chassi Veicular — Caminhão Munk (Guindauto)</h1>
-  <div class="numero">LAUDO DE INSPEÇÃO Nº: ${laudo.numero_inspecao || "___/____"}</div>
+  <div class="numero">LAUDO DE INSPEÇÃO Nº: ${formatarNumeroLaudo(laudo.numero_inspecao)}</div>
   ${fotoCapaUrl ? `<img src="${fotoCapaUrl}" class="foto-capa" /><div class="legenda-foto">Imagem 1 - caminhão munk</div>` : ""}
   <div class="dados-rt">
     <p><strong>RESPONSÁVEL TÉCNICO:</strong> ${user.nome}</p>
@@ -444,8 +449,7 @@ ${caracteristicas?.pbtc                     ? `<p class="dado"><strong>PBTC:</st
 ${caracteristicas?.cmt                      ? `<p class="dado"><strong>CMT:</strong> ${caracteristicas.cmt}</p>` : ""}
 
 <!-- ===================== 5. INSPEÇÕES ===================== -->
-<div class="page-break"></div>
-<h2>5. Inspeções</h2>
+<h2 style="margin-top:8mm;">5. Inspeções</h2>
 <p class="consideracao" style="margin-bottom:4mm;">Com base na ABNT NBR 14768:2015, NBR 16092:2012, NR-11 e NR-12</p>
 
 ${ordemSecoes.map((secaoId) => {
