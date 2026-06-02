@@ -59,7 +59,24 @@ export async function GET(request: NextRequest) {
       descricao: "ADD extra_3",
       query: `ALTER TYPE tipo_foto ADD VALUE IF NOT EXISTS 'extra_3'`,
     },
-    // Coluna hodometro na tabela veiculos
+    {
+      descricao: "CREATE TABLE engenheiros",
+      query: `CREATE TABLE IF NOT EXISTS engenheiros (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        nome TEXT NOT NULL,
+        crea_numero TEXT NOT NULL,
+        crea_estado TEXT NOT NULL,
+        especialidade TEXT NOT NULL DEFAULT 'Engenheiro Mecânico',
+        ativo TEXT NOT NULL DEFAULT 'sim',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
+    },
+    {
+      descricao: "ADD COLUMN laudos.engenheiro_id",
+      query: `ALTER TABLE laudos ADD COLUMN IF NOT EXISTS engenheiro_id UUID REFERENCES engenheiros(id) ON DELETE SET NULL`,
+    },
+        // Coluna hodometro na tabela veiculos
     {
       descricao: "ADD COLUMN veiculos.hodometro",
       query: `ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS hodometro TEXT`,

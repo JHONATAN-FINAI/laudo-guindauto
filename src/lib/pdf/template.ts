@@ -293,6 +293,13 @@ ${folhas}`;
 export function buildTemplate(dados: DadosPDF): string {
   const { laudo, proprietario, implemento, veiculo, caracteristicas, itens_inspecao, fotos, user } = dados;
 
+  
+  const eng = (dados as any).engenheiro || null;
+  const nomeEng = eng?.nome || user.nome;
+  const creaEng = eng?.crea_numero || user.crea_numero || "___";
+  const estadoEng = eng?.crea_estado || user.crea_estado || "__";
+  const especialidadeEng = eng?.especialidade || "Engenheiro Mecânico";
+
   const gruposItens = agruparPorSecao(itens_inspecao);
   const ordemSecoes = ["5.1", "5.2", "5.3", "5.4", "5.5"];
 
@@ -362,8 +369,8 @@ export function buildTemplate(dados: DadosPDF): string {
   <div class="numero">LAUDO DE INSPEÇÃO Nº: ${formatarNumeroLaudo(laudo.numero_inspecao)}</div>
   ${fotoCapaUrl ? `<img src="${fotoCapaUrl}" class="foto-capa" /><div class="legenda-foto">Imagem 1 - caminhão munk</div>` : ""}
   <div class="dados-rt">
-    <p><strong>RESPONSÁVEL TÉCNICO:</strong> ${user.nome}</p>
-    <p><strong>N° CREA:</strong> ${user.crea_numero || "___"}${user.crea_estado ? `/${user.crea_estado}` : ""}</p>
+    <p><strong>RESPONSÁVEL TÉCNICO:</strong> ${nomeEng}</p>
+    <p><strong>N° CREA:</strong> ${creaEng}/${estadoEng}</p>
     <p><strong>N° ART:</strong> ${laudo.art_numero || "___"}</p>
     <p><strong>DATA DA INSPEÇÃO:</strong> ${formatarData(laudo.data_inspecao)}</p>
     <p><strong>VALIDADE:</strong> ${formatarData(laudo.data_validade)}</p>
@@ -374,13 +381,35 @@ export function buildTemplate(dados: DadosPDF): string {
 <div class="page-break"></div>
 <h2>Termo de Abertura do Livro de Registros de Inspeção e Manutenção</h2>
 
-<p class="consideracao" style="margin-top:5mm;">
-  O presente livro, denominado "Livro de Registros de inspeção e manutenção", numerado de 01 (um) à 20 (vinte),
-  pertencente a empresa <strong>${proprietario?.razao_social || "___"}</strong>, localizada
-  em ${proprietario?.endereco || "___"}, inscrita no CNPJ: <strong>${proprietario?.cnpj || "___"}</strong>,
-  em cumprimento ao disposto nas Normas NR-11, NR-12, ABNT NBR 14768:2015, ABNT NBR 16092:2012,
-  destina-se ao Registro de inspeções e manutenções, verificadas com os equipamentos denominados:
-  Guindaste hidráulico articulado instalado sobre veículo caminhão munk (guindauto).
+<p class="consideracao" style="margin-top:5mm; text-indent:10mm;">
+  O presente Relatório de Inspeção Periódica tem por objetivo avaliar as condições técnicas e de
+  segurança do guindaste articulado hidráulico (guindauto) instalado sobre chassi veicular, de propriedade
+  da empresa <strong>${proprietario?.razao_social || "___"}</strong>, inscrita no CNPJ nº
+  <strong>${proprietario?.cnpj || "___"}</strong>, instalado no veículo de placa
+  <strong>${veiculo?.placa || "___"}</strong>, marca/modelo
+  <strong>${veiculo?.marca_modelo || "___"}</strong>, implemento fabricado por
+  <strong>${implemento?.fabricante || "___"}</strong>, modelo
+  <strong>${implemento?.modelo || "___"}</strong>${implemento?.numero_serie ? `, número de série <strong>${implemento.numero_serie}</strong>` : ""}.
+</p>
+
+<p class="consideracao" style="margin-top:4mm; text-indent:10mm;">
+  A inspeção foi realizada em conformidade com as seguintes normas regulamentadoras e normas técnicas:
+  NR-11 (Transporte, Movimentação, Armazenagem e Manuseio de Materiais), NR-12 (Segurança no Trabalho
+  em Máquinas e Equipamentos), ABNT NBR 14768:2015 (Guindastes Articulados Hidráulicos),
+  ABNT NBR 16092:2012 (Dispositivos de Movimentação e Elevação de Cargas) e Resolução CONTRAN
+  316/2009 (Requisitos de Segurança Veicular).
+</p>
+
+<p class="consideracao" style="margin-top:4mm; text-indent:10mm;">
+  A metodologia empregada consistiu em análise visual, dimensional e funcional dos componentes
+  estruturais, hidráulicos, de segurança e operacionais do equipamento, por meio de checklist técnico
+  baseado nas normas supracitadas, com registro fotográfico das condições encontradas.
+</p>
+
+<p class="consideracao" style="margin-top:4mm; text-indent:10mm;">
+  A inspeção foi conduzida por profissional habilitado, devidamente registrado no Conselho Regional
+  de Engenharia e Agronomia (CREA), com Anotação de Responsabilidade Técnica (ART) vinculada a este
+  documento, assumindo inteira responsabilidade técnica pelos dados e conclusões aqui apresentados.
 </p>
 
 <p style="text-align:right; margin-top:18mm; font-size:10pt;">
@@ -390,9 +419,9 @@ export function buildTemplate(dados: DadosPDF): string {
 <div class="assinatura" style="margin-top:20mm;">
   <div class="assinatura-bloco">
     <div class="linha"></div>
-    <p style="font-size:10pt;">${user.nome}</p>
-    <p style="font-size:10pt; font-weight:bold;">Engenheiro Mecânico</p>
-    <p style="font-size:10pt; font-weight:bold;">CREA ${user.crea_numero || "___"}${user.crea_estado ? `/${user.crea_estado}` : ""}</p>
+    <p style="font-size:10pt;">${nomeEng}</p>
+    <p style="font-size:10pt; font-weight:bold;">${especialidadeEng}</p>
+    <p style="font-size:10pt; font-weight:bold;">CREA ${creaEng}/${estadoEng}</p>
   </div>
   <div class="assinatura-bloco">
     <div class="linha"></div>
@@ -526,8 +555,8 @@ c) sofre qualquer tipo de acidente.</p>
 
 <!-- ===================== 9. RESPONSÁVEL TÉCNICO ===================== -->
 <h2 style="margin-top:6mm;">9. Identificação do Responsável Técnico</h2>
-<p class="dado"><strong>NOME:</strong> ${user.nome}</p>
-<p class="dado"><strong>REGISTRO PROFISSIONAL:</strong> CREA ${user.crea_numero || "___"}${user.crea_estado ? `/${user.crea_estado}` : ""}</p>
+<p class="dado"><strong>NOME:</strong> ${nomeEng}</p>
+<p class="dado"><strong>REGISTRO PROFISSIONAL:</strong> CREA ${creaEng}/${estadoEng}</p>
 <p class="dado"><strong>Nº da ART:</strong> ${laudo.art_numero || "___"}</p>
 <p class="dado"><strong>DATA:</strong> ${formatarData(laudo.data_inspecao)}</p>
 

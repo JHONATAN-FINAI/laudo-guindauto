@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { engenheiros } from "@/lib/db/schema";
 import { laudos, proprietarios, implementos, veiculos, caracteristicas_veiculo, itens_inspecao, fotos_laudo, users } from "@/lib/db/schema";
 import { getSessionUserId } from "@/lib/auth-helpers";
 import { eq, and, asc } from "drizzle-orm";
@@ -28,6 +29,11 @@ export async function GET(_: NextRequest, { params }: Params) {
   const fotos = await db.select().from(fotos_laudo).where(eq(fotos_laudo.laudo_id, id)).orderBy(asc(fotos_laudo.ordem));
   const [user] = await db.select({ nome: users.nome, crea_numero: users.crea_numero, crea_estado: users.crea_estado }).from(users).where(eq(users.id, userId)).limit(1);
 
+  // Engenheiro vinculado
+  const engenheiro = laudo.engenheiro_id
+    ? (await db.select().from(engenheiros).where(eq(engenheiros.id, laudo.engenheiro_id)).limit(1))[0] || null
+    : null;
+
   return NextResponse.json({
     ...laudo,
     proprietarios: prop || null,
@@ -37,6 +43,7 @@ export async function GET(_: NextRequest, { params }: Params) {
     itens_inspecao: itens,
     fotos_laudo: fotos,
     user: user || null,
+    engenheiro: engenheiro || null,
   });
 }
 

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { engenheiros } from "@/lib/db/schema";
 import { laudos, proprietarios, implementos, veiculos, caracteristicas_veiculo, itens_inspecao, fotos_laudo, users, textos_padrao } from "@/lib/db/schema";
 import { gerarPDF, type DadosPDF } from "@/lib/pdf/generate";
 import { getSessionUserId } from "@/lib/auth-helpers";
@@ -23,6 +24,11 @@ export async function GET(_: NextRequest, { params }: Params) {
   const [carac] = await db.select().from(caracteristicas_veiculo).where(eq(caracteristicas_veiculo.laudo_id, id)).limit(1);
   const itens = await db.select().from(itens_inspecao).where(eq(itens_inspecao.laudo_id, id));
   const fotos = await db.select().from(fotos_laudo).where(eq(fotos_laudo.laudo_id, id)).orderBy(asc(fotos_laudo.ordem));
+  // Engenheiro vinculado ao laudo
+  const engVinculado = laudo.engenheiro_id
+    ? (await db.select().from(engenheiros).where(eq(engenheiros.id, laudo.engenheiro_id)).limit(1))[0] || null
+    : null;
+
   const [perfil] = await db.select({ nome: users.nome, crea_numero: users.crea_numero, crea_estado: users.crea_estado }).from(users).where(eq(users.id, userId)).limit(1);
 
   // Busca textos padrão
@@ -42,6 +48,7 @@ export async function GET(_: NextRequest, { params }: Params) {
     itens_inspecao: itens,
     fotos: fotosComUrl,
     textos_padrao: textosMap,
+    engenheiro: engVinculado,
     user: {
       nome: perfil?.nome || "—",
       crea_numero: perfil?.crea_numero || "",

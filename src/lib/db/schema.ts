@@ -58,6 +58,7 @@ export const laudos = pgTable("laudos", {
   data_validade: text("data_validade"),
   conclusao: conclusaoLaudoEnum("conclusao"),
   art_numero: text("art_numero"),
+  engenheiro_id: uuid("engenheiro_id"),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -140,6 +141,19 @@ export const fotos_laudo = pgTable("fotos_laudo", {
   storage_url: text("storage_url").notNull(),
   legenda: text("legenda"),
   ordem: integer("ordem").default(0).notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+
+// Engenheiros responsáveis técnicos
+export const engenheiros = pgTable("engenheiros", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  user_id: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  nome: text("nome").notNull(),
+  crea_numero: text("crea_numero").notNull(),
+  crea_estado: text("crea_estado").notNull(),
+  especialidade: text("especialidade").default("Engenheiro Mecânico").notNull(),
+  ativo: text("ativo").default("sim").notNull(),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

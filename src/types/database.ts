@@ -38,6 +38,17 @@ export interface User {
   created_at: string;
 }
 
+export interface Engenheiro {
+  id: string;
+  user_id: string;
+  nome: string;
+  crea_numero: string;
+  crea_estado: string;
+  especialidade: string;
+  ativo: string;
+  created_at: string;
+}
+
 export interface Laudo {
   id: string;
   user_id: string;
@@ -47,6 +58,7 @@ export interface Laudo {
   data_validade: string | null;
   conclusao: ConclusaoLaudo | null;
   art_numero: string | null;
+  engenheiro_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -162,4 +174,5 @@ export interface LaudoCompleto extends Laudo {
   itens_inspecao: ItemInspecao[];
   fotos: FotoLaudo[];
   user: Pick<User, "nome" | "crea_numero" | "crea_estado">;
+  engenheiro: Engenheiro | null;
 }
