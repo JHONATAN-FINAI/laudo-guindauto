@@ -12,6 +12,7 @@ export interface DadosPDF {
   fotos: any[];
   textos_padrao: Record<string, string>;
   user: { nome: string; crea_numero: string; crea_estado: string };
+  engenheiro?: any;
 }
 
 function findChromePath(): string {
