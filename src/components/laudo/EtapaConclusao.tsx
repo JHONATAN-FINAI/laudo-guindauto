@@ -85,7 +85,7 @@ export function EtapaConclusao() {
     }
   }
 
-  const isFinalizado = laudo?.status === "finalizado";
+  const isFinalizado = laudo != null && laudo.status === "finalizado";
 
   return (
     <div className="space-y-6">

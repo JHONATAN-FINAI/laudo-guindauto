@@ -34,11 +34,13 @@ export default function EditarLaudoPage() {
     setEtapa,
     proximaEtapa,
     etapaAnterior,
+    resetWizard,
   } = useWizardStore();
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
+      resetWizard();
       setEtapa(0);
       carregarLaudo(id);
     }

@@ -14,7 +14,6 @@ interface WizardState {
   setSalvando: (salvando: boolean) => void;
   setCarregando: (carregando: boolean) => void;
   atualizarSecao: (secao: string, dados: unknown) => void;
-  /** Limpa o wizard — deve ser chamado ao iniciar um novo laudo */
   resetWizard: () => void;
 }
 
@@ -47,11 +46,12 @@ export const useWizardStore = create<WizardState>()(
       set({ laudo: { ...laudo, [secao]: dados } });
     },
 
-    resetWizard: () => set({ laudo: null, etapaAtual: 0, salvando: false }),
+    // Limpa apenas os metadados do laudo anterior — mantém carregando:true
+    // para não exibir campos do laudo antigo enquanto o novo carrega
+    resetWizard: () => set({ laudo: null, etapaAtual: 0, salvando: false, carregando: false }),
   })
 );
 
-// Nomes das etapas para o stepper
 export const ETAPAS_WIZARD = [
   "Proprietário",
   "Implemento",
